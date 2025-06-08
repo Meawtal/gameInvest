@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>กระดานหุ้น Panic on Wall Street</title>
+  <style>
+    /* CSS เบื้องต้น */
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      text-align: center;
+      background: #f0f4f8;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.3rem;
+    }
+    .header p {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stock-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+      border: 1px solid #ddd;
+    }
+    .stock-card h2 {
+      margin-bottom: 0.5rem;
+    }
+    .price {
+      font-size: 1.5rem;
+      color: #333;
+      margin-bottom: 0.3rem;
+    }
+    .change {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-top: 0;
+    }
+    .positive {
+      color: #16a34a; /* สีเขียว */
+    }
+    .negative {
+      color: #dc2626; /* สีแดง */
+    }
+    .neutral {
+      color: #6b7280; /* สีเทา */
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      margin: 0 0.5rem;
+      box-shadow: 0 4px 6px rgb(37 99 235 / 0.5);
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1e40af;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>📊 กระดานหุ้น Panic on Wall Street</h1>
+      <p>รอบที่ <span id="round">1</span></p>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <button id="randomizeBtn">🎲 สุ่มราคาหุ้นรอบใหม่</button>
+    <button id="resetBtn">🔄 รีเซตกระดานหุ้น</button>
+  </div>
+
+<script>
+  // ข้อมูลเริ่มต้นหุ้น
+  const initialStocks = [
+    { name: "บริษัทแดง เสี่ยงมาก", price: 7, color: "red" },
+    { name: "บริษัทน้ำเงิน เสี่ยงปานกลาง", price: 5, color: "blue" },
+    { name: "บริษัทเขียว เสี่ยง", price: 3, color: "green" },
+    { name: "บริษัทเหลือง เสี่ยงน้อย", price: 1, color: "yellow" },
+  ];
+
+  // ตัวแปรสถานะ
+  let round = 1;
+  let stocks = JSON.parse(JSON.stringify(initialStocks)); // deep copy
+
+  const roundEl = document.getElementById('round');
+  const boardEl = document.getElementById('board');
+  const randomizeBtn = document.getElementById('randomizeBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  // ฟังก์ชันสุ่ม delta ตามสีหุ้น
+  function getDeltaByColor(color) {
+    switch (color) {
+      case "red":
+        return Math.floor(Math.random() * 15) - 7;  // -7 ถึง +7
+      case "blue":
+        return Math.floor(Math.random() * 11) - 5;  // -5 ถึง +5
+      case "green":
+        return Math.floor(Math.random() * 7) - 3;   // -3 ถึง +3
+      case "yellow":
+        return Math.floor(Math.random() * 3) - 1;   // -1 ถึง +1
+      default:
+        return 0;
+    }
+  }
+
+  // ฟังก์ชันแสดงผลหุ้นบนหน้าเว็บ
+  function renderStocks() {
+    boardEl.innerHTML = ""; // ล้างข้อมูลเก่า
+
+    stocks.forEach(stock => {
+      const card = document.createElement("div");
+      card.className = "stock-card";
+
+      const title = document.createElement("h2");
+      title.textContent = stock.name;
+
+      const price = document.createElement("p");
+      price.className = "price";
+      price.textContent = `💰 $${stock.price}`;
+
+      const change = document.createElement("p");
+      change.className = "change";
+
+      if (stock.change > 0) {
+        change.textContent = `+${stock.change}`;
+        change.classList.add("positive");
+      } else if (stock.change < 0) {
+        change.textContent = stock.change;
+        change.classList.add("negative");
+      } else {
+        change.textContent = "0";
+        change.classList.add("neutral");
+      }
+
+      card.appendChild(title);
+      card.appendChild(price);
+      card.appendChild(change);
+      boardEl.appendChild(card);
+    });
+  }
+
+  // ฟังก์ชันอัพเดตราคาหุ้น
+  function updatePrices() {
+    stocks = stocks.map(stock => {
+      const delta = getDeltaByColor(stock.color);
+      return {
+        ...stock,
+        price: Math.max(1, stock.price + delta),
+        change: delta,
+      };
+    });
+    round++;
+    roundEl.textContent = round;
+    renderStocks();
+  }
+
+  // ฟังก์ชันรีเซตเกม
+  function resetGame() {
+    stocks = JSON.parse(JSON.stringify(initialStocks));
+    round = 1;
+    roundEl.textContent = round;
+    renderStocks();
+  }
+
+  // เริ่มต้นแสดงผล
+  renderStocks();
+
+  // event listeners
+  randomizeBtn.addEventListener('click', updatePrices);
+  resetBtn.addEventListener('click', resetGame);
+</script>
+
+</body>
+</html>
