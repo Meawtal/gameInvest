@@ -91,10 +91,10 @@
 <script>
   // ข้อมูลเริ่มต้นหุ้น
   const initialStocks = [
-    { name: "บริษัทแดง เสี่ยงมาก", price: 7, color: "red" },
-    { name: "บริษัทน้ำเงิน เสี่ยงปานกลาง", price: 5, color: "blue" },
-    { name: "บริษัทเขียว เสี่ยง", price: 3, color: "green" },
-    { name: "บริษัทเหลือง เสี่ยงน้อย", price: 1, color: "yellow" },
+    { name: "บริษัทแดง เสี่ยงมาก", price: 0, color: "red" },
+    { name: "บริษัทน้ำเงิน เสี่ยงปานกลาง", price: 0, color: "blue" },
+    { name: "บริษัทเขียว เสี่ยง", price: 0, color: "green" },
+    { name: "บริษัทเหลือง เสี่ยงน้อย", price: 0, color: "yellow" },
   ];
 
   // ตัวแปรสถานะ
@@ -160,18 +160,25 @@
 
   // ฟังก์ชันอัพเดตราคาหุ้น
   function updatePrices() {
-    stocks = stocks.map(stock => {
-      const delta = getDeltaByColor(stock.color);
-      return {
-        ...stock,
-        price: Math.max(1, stock.price + delta),
-        change: delta,
-      };
-    });
-    round++;
-    roundEl.textContent = round;
-    renderStocks();
-  }
+  stocks = stocks.map(stock => {
+    const delta = getDeltaByColor(stock.color);
+    let newPrice = stock.price + delta;
+
+    // บังคับให้ราคาไม่เกิน 7 และไม่ต่ำกว่า -7
+    if (newPrice > 7) newPrice = 7;
+    if (newPrice < -7) newPrice = -7;
+
+    return {
+      ...stock,
+      price: newPrice,
+      change: delta,
+    };
+  });
+  round++;
+  roundEl.textContent = round;
+  renderStocks();
+}
+
 
   // ฟังก์ชันรีเซตเกม
   function resetGame() {
